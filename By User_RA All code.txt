@@ -158,7 +158,7 @@ ELSave = False  'Set flag to indicate EL data is not save
 SkipELError: 'continue execution if no error
 
 If HipotSave And GBSave And ELSave Then
-    MsgBox ("All data has successfully save!") & vbNewLine & ("At Z:\Scanned_Test_Result\Medtronic")
+    MsgBox ("All data has successfully save!") & vbNewLine & ("At your csv file location address")
 End If
 
 End Sub
@@ -393,3 +393,4 @@ Private Sub Timer1_Timer()
 Label32.Caption = Format(Now, "DD/MM/YYYY HH:MM:SS")
 
 End Sub
+
