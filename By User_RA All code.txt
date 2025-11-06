@@ -1,0 +1,395 @@
+'Created by User_RA
+
+'Reset filled in button
+Private Sub cmdReset_Click()
+
+Dim ctrl As Control
+For Each ctrl In Me.Controls
+ If TypeOf ctrl Is TextBox Then 'Button to control for all TextBox
+    ctrl = "" 'Emptied the TextBox
+ End If
+ Next
+End Sub
+'Appear csv file
+Private Sub cmdSubmit_Click()
+If Text1.Text = "" Or Combo1.Text = "" Or Text2.Text = "" Or _
+    Text3.Text = "" Or Text4.Text = "" Or Text5.Text = "" Or _
+    Text6.Text = "" Or Text7.Text = "" Or Text8.Text = "" Or _
+    Text9.Text = "" Or Text10.Text = "" Or Text11.Text = "" Or Text12.Text = "" Then
+    MsgBox ("Incomplete data!") & vbNewLine & ("Please fill in all data."), vbInformation
+    
+    Exit Sub
+End If
+    
+Dim time As String 'Retrieve date and time data
+    time = Format(Now, "DD/MM/YYYY HH:MM:SS")
+    
+Dim SerialNumber As String 'Retrieve serial number data
+    SerialNumber = Text1.Text
+
+Dim PartNumber As String 'Retrieve part number at combobox data
+    PartNumber = Combo1.Text
+    
+'Retrieve Hipot Test data
+Dim HipotCurrent As String
+    HipotCurrent = Text2.Text
+If Val(Text2.Text) > 0.002 And Val(Text2.Text) < 0.5 Then 'For PASS/FAIL condition Hipot Test
+    HipotCurrent = "PASS"
+Else
+    HipotCurrent = "FAIL"
+End If
+
+'Retrieve GB Test data
+Dim GBChroma As String 'Retrieve GB Test data for ChromaTest + AC Cable resistance
+    GBChroma = Text3.Text
+Dim GBOhm As String ' Retrieve Measured Resistance data
+    GBOhm = Text4.Text
+If Val(Text4.Text) > 0 And Val(Text4.Text) < 15 Then 'For PASS/FAIL condition GB Test, High limit = 15mOhms
+    GBOhm = "PASS"
+Else
+    GBOhm = "FAIL"
+End If
+
+'Retrieve EL Test data for No Fault Measured Current(Normal & Reverse) Input 100VAC 60Hz
+Dim NoFault1 As String
+    NoFault1 = Text5.Text And Text6.Text
+If Val(Text5.Text) > 0 And Val(Text5.Text) < 5 And _
+    Val(Text6.Text) > 0 And Val(Text6.Text) < 5 Then 'For PASS/FAIL condition Leakage Test
+    NoFault1 = "PASS"
+Else
+    NoFault1 = "FAIL"
+End If
+
+
+'Retrieve EL Test data for Single Fault Measured Current(Normal & Reverse) Input 100VAC 60Hz
+Dim SingleFault1 As String
+    SingleFault1 = Text7.Text And Text8.Text
+If Val(Text7.Text) > 0 And Val(Text7.Text) < 10 And _
+    Val(Text8.Text) > 0 And Val(Text8.Text) < 10 Then 'For PASS/FAIL condition Leakage Test
+    SingleFault1 = "PASS"
+Else
+    SingleFault1 = "FAIL"
+End If
+
+'Retrieve EL Test data for No Fault Measured Current(Normal & Reverse) Input 230VAC 60Hz
+Dim NoFault2 As String
+    NoFault2 = Text9.Text And Text10.Text
+If Val(Text9.Text) > 0 And Val(Text9.Text) < 5 And _
+    Val(Text10.Text) > 0 And Val(Text10.Text) < 5 Then 'For PASS/FAIL condition Leakage Test
+    NoFault2 = "PASS"
+Else
+    NoFault2 = "FAIL"
+End If
+
+'Retrieve EL Test data for Single Fault Measured Current(Normal & Reverse) Input 230VAC 60Hz
+Dim SingleFault2 As String
+    SingleFault2 = Text11.Text And Text12.Text
+If Val(Text11.Text) > 0 And Val(Text11.Text) < 10 And _
+    Val(Text12.Text) > 0 And Val(Text12.Text) < 10 Then 'For PASS/FAIL conditiion Leakage Test
+    SingleFault2 = "PASS"
+Else
+    SingleFault2 = "FAIL"
+End If
+
+'Save Hipot Test Data to csv file
+On Error GoTo HipotErrorHandler 'Condition if interface and csv opened simultaneously (error), jump to HipotErrorHandler label
+Dim HipotSave As Boolean 'To track Hipot data succesfully save
+
+Dim fn1 As Integer, newfile1 As Integer 'To declare file number
+    fn1 = FreeFile
+Open "your csv file location address" For Append As #fn1 'To create csv file
+HipotData = time & "," & SerialNumber & "," & PartNumber & "," & Text2.Text & "," & HipotCurrent 'Data that will save on csv file
+Print #fn1, HipotData
+Close #fn1
+
+HipotSave = True    'Set flag to indicate hipot data successfully save
+GoTo SkipHipotError 'If not error,it will go to SkipHipotError label
+
+HipotErrorHandler:  'If error occur, it will go here
+MsgBox ("Failed to saved HIPOT Test Data!") & vbNewLine & ("Make sure to close the excel file."), vbExclamation
+
+HipotSave = False 'Set flag to indicate hipot data is not save
+
+SkipHipotError: 'Continue execution after error handling or no error occur
+
+'Save GB Test data to csv file
+On Error GoTo GBErrorHandler    'Condition if interface and csv opened simultaneously (error), jump to GBErrorHandler label
+Dim GBSave As Boolean   'To track GB data succesfully save
+
+Dim fn2 As Integer, newfile2 As Integer 'To declare file number
+    fn2 = FreeFile
+Open "your csv file location address" For Append As #fn2 'To create new csv file
+GBData = time & "," & SerialNumber & "," & PartNumber & "," & GBChroma & "," & Text4.Text & "," & GBOhm 'Data that will save on csv file
+Print #fn2, GBData
+Close #fn2
+
+GBSave = True   'Set flag to indicate GB data successfully save
+GoTo SkipGBError    'If not error,it will go to SkipGBError label
+
+GBErrorHandler: 'If error occur, it will go here
+MsgBox ("Failed to saved GB Test Data!") & vbNewLine & ("Make sure to close the excel file."), vbExclamation
+
+GBSave = False  'Set flag to indicate GB data is not save
+
+SkipGBError:    'Continue execution after error handling or no error occur
+
+'Save EL Test data csv
+On Error GoTo ELErrorHandler 'Condition if interface and csv opened simultaneously (error), jump to GBErrorHandler label
+Dim ELSave As Boolean   'To track EL data successfully save
+
+Dim fn3 As Integer, newfile3 As Integer 'Declare file number
+    fn3 = FreeFile
+Open "your csv file location address" For Append As #fn3   'To create new csv file
+ELData = time & "," & SerialNumber & "," & PartNumber & "," & Text5.Text & "," & NoFault1 & "," _
+& Text6.Text & "," & NoFault1 & "," & Text7.Text & "," & SingleFault1 & "," & Text8.Text & "," _
+& SingleFault1 & "," & Text9.Text & "," & NoFault2 & "," & Text10.Text & "," & NoFault2 & "," _
+& Text11.Text & "," & SingleFault2 & "," & Text12.Text & "," & SingleFault2 'Data that will save on csv file
+Print #fn3, ELData
+Close #fn3
+
+ELSave = True   'Set flag to indicate EL data successfully save
+GoTo SkipELError    'If not error, go to SkipELError
+
+ELErrorHandler: 'Go here if error occur
+MsgBox ("Failed to saved EL Test Data!") & vbNewLine & ("Make sure to close the excel file."), vbExclamation
+
+ELSave = False  'Set flag to indicate EL data is not save
+
+SkipELError: 'continue execution if no error
+
+If HipotSave And GBSave And ELSave Then
+    MsgBox ("All data has successfully save!") & vbNewLine & ("At Z:\Scanned_Test_Result\Medtronic")
+End If
+
+End Sub
+
+Private Sub Form_Load()
+
+'Date and time setting
+Label32.Caption = Format(Now, " DD/MM/YYYY HH:MM:SS")
+Timer1.Interval = 1000 ' To set the timetick every sec
+Timer1.Enabled = True
+
+'HIPOT Test data PASS & FAIL Condition
+Label28.Visible = False  'hide "PASS & FAIL" words on initial program
+Label35.Visible = False
+Label28.ForeColor = &H8000& 'Adding colour
+Label35.ForeColor = vbRed
+
+'GB Test data PASS & FAIL Condition
+Label29.Visible = False  'hide "PASS & FAIL" words on initial program
+Label36.Visible = False
+Label29.ForeColor = &H8000& 'Adding colour
+Label36.ForeColor = vbRed
+
+'Input 100VAC 60Hz ELT data PASS & FAIL Condition
+Label30.Visible = False 'hide "PASS & FAIL" words on initial program
+Label37.Visible = False
+Label30.ForeColor = &H8000& 'Adding colour
+Label37.ForeColor = vbRed
+
+'Input 230VAC 60Hz ELT data PASS & FAIL Condition
+Label31.Visible = False 'hide "PASS & FAIL" words on initial program
+Label38.Visible = False
+Label31.ForeColor = &H8000& 'Adding colour
+Label38.ForeColor = vbRed
+
+
+End Sub
+'No Fault-Normal Polarity Input 230VAC 60Hz ELT Data
+Private Sub Text10_Change()
+
+Dim num8 As String
+    num8 = Text10.Text   'Compare text to numeric
+    
+    If Val(num8) > 0 And Val(num8) < 5 Then
+        Label31.Visible = True
+        Label38.Visible = False 'PASS condition
+    Else
+        Label31.Visible = False
+        Label38.Visible = True  'FAIL condition
+    End If
+If Text10.Text = "" Then    'New condition when the textbox is empty
+        Label31.Visible = False
+        Label38.Visible = False
+End If
+
+    
+End Sub
+'Single Fault-Normal Polarity Input 230VAC 60Hz ELT Data
+Private Sub Text11_Change()
+
+Dim num9 As String
+    num9 = Text11.Text  'Compare text to numeric
+    
+    If Val(num9) > 0 And Val(num9) < 10 Then
+        Label31.Visible = True
+        Label38.Visible = False 'PASS condition
+    Else
+        Label31.Visible = False
+        Label38.Visible = True  'FAIL condition
+    End If
+    
+If Text11.Text = "" Then 'New condition when the textbox is empty
+        Label31.Visible = False
+        Label38.Visible = False
+End If
+End Sub
+'Single Fault-Reverse Polarity Input 230VAC 60Hz ELT Data
+Private Sub Text12_Change()
+
+Dim num10 As String
+    num10 = Text12.Text  'Compare text to numeric
+    
+    If Val(num10) > 0 And Val(num10) < 10 Then
+        Label31.Visible = True
+        Label38.Visible = False 'PASS condition
+    Else
+        Label31.Visible = False
+        Label38.Visible = True 'FAIL condition
+    End If
+    
+If Text12.Text = "" Then 'New condition when the textbox is empty
+        Label31.Visible = False
+        Label38.Visible = False
+End If
+End Sub
+
+'HIPOT TEST DATA
+Private Sub Text2_Change()
+
+Dim num1 As String
+    num1 = Text2.Text  'Compare text to numeric
+    
+    If Val(num1) > 0.002 And Val(num1) < 0.5 Then
+        Label28.Visible = True
+        Label35.Visible = False 'PASS condition
+    Else
+        Label28.Visible = False
+        Label35.Visible = True  'FAIL condition
+    End If
+    
+If Text2.Text = "" Then 'New condition when the textbox is empty
+        Label28.Visible = False
+        Label35.Visible = False
+End If
+End Sub
+'GB TEST DATA
+Private Sub Text4_Change()
+
+Dim num2 As String
+    num2 = Text4.Text 'Compare text to numeric
+
+    If Val(num2) > 0 And Val(num2) < 15 Then ' High limit for GB Test = 15mOhms
+        Label29.Visible = True
+        Label36.Visible = False 'PASS condition
+    Else
+        Label29.Visible = False
+        Label36.Visible = True  'FAIL condition
+    End If
+    
+If Text4.Text = "" Then 'New condition when the textbox is empty
+        Label29.Visible = False
+        Label36.Visible = False
+End If
+End Sub
+'No Fault-Normal Polarity Input 100VAC 60Hz ELT DATA
+Private Sub Text5_Change()
+
+Dim num3 As String
+    num3 = Text5.Text   'Compare text to numeric
+    
+    If Val(num3) > 0 And Val(num3) < 5 Then
+        Label30.Visible = True
+        Label37.Visible = False 'PASS condition
+    Else
+        Label30.Visible = False
+        Label37.Visible = True  'FAIL condition
+    End If
+        
+If Text5.Text = "" Then 'New condition when textbox is empty
+    Label30.Visible = False
+    Label37.Visible = False
+End If
+End Sub
+'No Fault-Reverse Polarity Input 100VAC 60Hz ELT DATA
+Private Sub Text6_Change()
+
+Dim num4 As String
+    num4 = Text6.Text   'Compare text to numeric
+    
+    If Val(num4) > 0 And Val(num4) < 5 Then
+        Label30.Visible = True
+        Label37.Visible = False 'PASS condition
+    Else
+        Label30.Visible = False
+        Label37.Visible = True  'FAIL condition
+    End If
+    
+If Text6.Text = "" Then 'New condition when textbox is empty
+    Label30.Visible = False
+    Label37.Visible = False
+End If
+End Sub
+'Single Fault-Normal Polarity Input 100VAC 60Hz ELT DATA
+Private Sub Text7_Change()
+
+Dim num5 As String
+    num5 = Text7.Text   'Compare text to numeric
+    
+    If Val(num5) > 0 And Val(num5) < 10 Then
+        Label30.Visible = True
+        Label37.Visible = False 'PASS condition
+    Else
+        Label30.Visible = False
+        Label37.Visible = True  'FAIL condition
+    End If
+    
+If Text7.Text = "" Then 'New condition when textbox is empty
+    Label30.Visible = False
+    Label37.Visible = False
+End If
+End Sub
+'Single Fault-Reverse Polarity Input 100VAC 60Hz ELT DATA
+Private Sub Text8_Change()
+
+Dim num6 As String
+    num6 = Text8.Text   'Compare text to numeric
+    
+    If Val(num6) > 0 And Val(num6) < 10 Then
+        Label30.Visible = True
+        Label37.Visible = False 'PASS condition
+    Else
+        Label30.Visible = False
+        Label37.Visible = True  'FAIL condition
+    End If
+If Text8.Text = "" Then 'New condition when textbox is empty
+        Label30.Visible = False
+        Label37.Visible = False
+End If
+End Sub
+'No Fault-Normal Polarity Input 230VAC 60Hz ELT Data
+Private Sub Text9_Change()
+
+Dim num7 As String
+    num7 = Text9.Text   'Compare text to numeric
+    
+    If Val(num7) > 0 And Val(num7) < 5 Then
+        Label31.Visible = True
+        Label38.Visible = False 'PASS condition
+    Else
+        Label31.Visible = False
+        Label38.Visible = True  'FAIL condition
+    End If
+If Text9.Text = "" Then 'New condition when textbox is empty
+        Label31.Visible = False
+        Label38.Visible = False
+End If
+End Sub
+
+'SET DATE AND TIME
+Private Sub Timer1_Timer()
+' To show current date and time on label
+Label32.Caption = Format(Now, "DD/MM/YYYY HH:MM:SS")
+
+End Sub
